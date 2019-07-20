@@ -10,6 +10,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
@@ -25,9 +26,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.List;
 
-import okhttp3.MediaType;
-import okhttp3.MultipartBody;
-import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -47,10 +45,13 @@ public class HomeFragment extends Fragment {
     private FloatingActionButton mFloatingActionButton;
     private List<Feed> mFeeds = new ArrayList<>();
     private FeedAdapter mFeedAdapter;
+    private UploadDialogFragment mUploadDialogFragment;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         Log.d(TAG, "onCreate: ");
         super.onCreate(savedInstanceState);
+        mUploadDialogFragment = new UploadDialogFragment();
     }
 
     @Nullable
@@ -80,6 +81,10 @@ public class HomeFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 //TODO 添加视频
+                FragmentManager fm = getFragmentManager();
+                if (fm != null) {
+                    mUploadDialogFragment.show(fm, "UploadDialog");
+                }
             }
         });
 
