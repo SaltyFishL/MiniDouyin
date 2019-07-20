@@ -14,6 +14,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.minidouyin.R;
 import com.example.minidouyin.bean.Feed;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -26,6 +27,8 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.VH> {
     private Context context;
     private List<Feed> feeds;
 
+    private OnItemClicked mOnItemClicked;
+
     public FeedAdapter(Context context, List<Feed> feeds) {
         this.context = context;
         this.feeds = feeds;
@@ -35,7 +38,7 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.VH> {
     @Override
     public FeedAdapter.VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         //设置子布局
-        View view = LayoutInflater.from(context).inflate(R.layout.item_feed, parent, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.list_item_feed, parent, false);
         //关联viewHolder
         VH vh = new VH(view);
         return vh;
@@ -49,11 +52,25 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.VH> {
                 .placeholder(R.mipmap.tiktok)
                 .override(250, 350)
                 .into(holder.imageView);
+
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mOnItemClicked.onItemClick(position);
+            }
+        });
     }
 
+    public Feed getItem(int position) {
+        return feeds.get(position);
+    }
     @Override
     public int getItemCount() {
-        return feeds.size();
+        if (feeds != null) {
+            return feeds.size();
+        } else {
+            return 0;
+        }
     }
 
     public class VH extends RecyclerView.ViewHolder {
@@ -65,5 +82,13 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.VH> {
             imageView = itemView.findViewById(R.id.feed_item_image);
 
         }
+    }
+
+    public interface OnItemClicked {
+        void onItemClick(int position);
+    }
+
+    public void setOnItemClicked(OnItemClicked onItemClicked) {
+        this.mOnItemClicked = onItemClicked;
     }
 }

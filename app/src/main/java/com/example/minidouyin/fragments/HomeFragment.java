@@ -1,5 +1,6 @@
 package com.example.minidouyin.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,8 +17,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.minidouyin.R;
+import com.example.minidouyin.activities.FeedPagerActivity;
 import com.example.minidouyin.adapter.FeedAdapter;
 import com.example.minidouyin.bean.Feed;
+import com.example.minidouyin.bean.FeedLab;
 import com.example.minidouyin.bean.FeedResponse;
 import com.example.minidouyin.network.IMiniDouyinService;
 import com.example.minidouyin.network.RetrofitManager;
@@ -36,13 +39,12 @@ import retrofit2.Retrofit;
  * @Date: 2019/7/18
  * @Time: 19:34
  */
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment implements FeedAdapter.OnItemClicked {
 
     private static final String TAG = "HomeFragment";
     private static final int SPAN_COUNT = 2;
     private RecyclerView mRecyclerView;
     private SwipeRefreshLayout mRefresh;
-    private FloatingActionButton mFloatingActionButton;
     private List<Feed> mFeeds = new ArrayList<>();
     private FeedAdapter mFeedAdapter;
     private UploadDialogFragment mUploadDialogFragment;
@@ -76,8 +78,8 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        mFloatingActionButton = getActivity().findViewById(R.id.floating_action_bar);
-        mFloatingActionButton.setOnClickListener(new View.OnClickListener() {
+        FloatingActionButton floatingActionButton = getActivity().findViewById(R.id.floating_action_bar);
+        floatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 //TODO 添加视频
@@ -108,13 +110,13 @@ public class HomeFragment extends Fragment {
             @Override
             public void onResponse(Call<FeedResponse> call, Response<FeedResponse> response) {
                 mFeeds = response.body().getFeeds();
-                if (mFeedAdapter == null) {
-                    mFeedAdapter = new FeedAdapter(getActivity(), mFeeds);
-                    mRecyclerView.setAdapter(mFeedAdapter);
-                } else {
-                    //TODO 似乎没有调用?
-                    mFeedAdapter.notifyDataSetChanged();
-                }
+                FeedLab.get(getActivity()).setFeeds(mFeeds);
+
+                mFeedAdapter = new FeedAdapter(getActivity(), mFeeds);
+                mRecyclerView.setAdapter(mFeedAdapter);
+                mFeedAdapter.setOnItemClicked(HomeFragment.this);
+
+                mFeedAdapter.notifyDataSetChanged();
                 mRefresh.setRefreshing(false);
             }
 
@@ -124,5 +126,13 @@ public class HomeFragment extends Fragment {
                 mRefresh.setRefreshing(false);
             }
         });
+    }
+
+
+    @Override
+    public void onItemClick(int position) {
+        Intent intent = new Intent(getActivity(), FeedPagerActivity.class);
+        intent.putExtra(FeedFragment.EXTRA_FEED_POSITION, position);
+        startActivity(intent);
     }
 }

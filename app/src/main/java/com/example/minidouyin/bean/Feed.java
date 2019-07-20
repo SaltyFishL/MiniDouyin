@@ -2,6 +2,8 @@ package com.example.minidouyin.bean;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.util.UUID;
+
 /**
  * @author: jq_lu
  * @Date: 2019/7/18
@@ -16,6 +18,12 @@ public class Feed {
     private String mImageUrl;
     @SerializedName("video_url")
     private String mVideoUrl;
+
+//    private UUID mId;
+
+    public Feed() {
+//        mId = UUID.randomUUID();
+    }
 
     public String getStudentId() {
         return mStudentId;
@@ -48,4 +56,9 @@ public class Feed {
     public void setVideoUrl(String videoUrl) {
         mVideoUrl = videoUrl;
     }
+
+//    public UUID getId() {
+//        return mId;
+//    }
+
 }
