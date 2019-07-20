@@ -53,8 +53,7 @@ public class FeedPagerActivity extends FragmentActivity {
             @NonNull
             @Override
             public Fragment getItem(int position) {
-                position = mPosition;
-                return FeedFragment.newInstance(mPosition);
+                return FeedFragment.newInstance(position);
             }
 
             @Override
