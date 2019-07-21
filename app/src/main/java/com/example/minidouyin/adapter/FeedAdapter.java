@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -53,6 +54,7 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.VH> {
                 .override(250, 350)
                 .into(holder.imageView);
 
+        holder.textView.setText(feeds.get(position).getUserName());
 //        ViewGroup.LayoutParams params = holder.imageView.getLayoutParams();
 //        int imgH = feeds.get(position).getImageH();
 //        int imgW = feeds.get(position).getImageW();
@@ -83,12 +85,12 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.VH> {
 
     public class VH extends RecyclerView.ViewHolder {
         private ImageView imageView;
-
+        private TextView textView;
         public VH(@NonNull View itemView) {
             super(itemView);
             //设置复用控件
             imageView = itemView.findViewById(R.id.feed_item_image);
-
+            textView = itemView.findViewById(R.id.student_info);
         }
     }
 

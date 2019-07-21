@@ -11,12 +11,25 @@
     android:layout_height="370dp"
     android:layout_width="match_parent">
 
-    <ImageView
-        android:id="@+id/feed_item_image"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerCrop"
-        android:backgroundTint="@color/tikTokBlack"
-        android:src="@mipmap/tiktok" />
+        android:layout_height="match_parent">
+        <ImageView
+            android:id="@+id/feed_item_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:backgroundTint="@color/tikTokBlack"
+            android:src="@mipmap/tiktok" />
+
+        <TextView
+            android:id="@+id/student_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:textColor="@color/cardview_light_background"
+            android:background="#e0000000"/>
+
+    </RelativeLayout>
 
 </androidx.cardview.widget.CardView>
