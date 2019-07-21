@@ -69,7 +69,10 @@ public class FeedFragment extends Fragment {
         mVideoView = view.findViewById(R.id.video_view);
         mPlayImage = view.findViewById(R.id.play_image);
         mLoading = view.findViewById(R.id.loading);
+//        mHeart.setAnimation(R.raw.heart);
         mHeart = view.findViewById(R.id.heart);
+        mHeart.setRepeatCount(0);
+//        mHeart = view.findViewById(R.id.heart);
 
         mVideoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
@@ -105,7 +108,11 @@ public class FeedFragment extends Fragment {
 
             @Override
             public void doubleClick() {
+                //TODO 处理doubleClick事件
+                mHeart.setVisibility(View.VISIBLE);
                 mHeart.playAnimation();
+//                mHeart.setVisibility(View.INVISIBLE);
+//                mHeart.playAnimation();
             }
         }));
 
