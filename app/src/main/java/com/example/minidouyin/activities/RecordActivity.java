@@ -8,6 +8,7 @@ import android.media.MediaRecorder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -19,6 +20,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.example.minidouyin.R;
@@ -48,21 +50,43 @@ public class RecordActivity extends Activity {
 
     private int CAMERA_TYPE = Camera.CameraInfo.CAMERA_FACING_BACK;
     private int rotationDegree = 0;
+    private int recLen = 0;
     private static final int DEGREE_90 = 90;
     private static final int DEGREE_180 = 180;
     private static final int DEGREE_270 = 270;
     private static final int DEGREE_360 = 360;
-
     private float oldDist = 1f;
 
     private boolean isRecording = false;
-
+    private String videoPath;
     private Uri onPauseUri;
     private Uri videoUri;
-    private String videoPath;
 
     private ImageView img_Record;
     private ImageView img_Switch;
+    private ProgressBar progressBar;
+
+    private Handler mHandler= new Handler();
+    private Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            if (isRecording){
+                if(recLen<20) {
+                    recLen++;
+                    progressBar.setProgress(recLen * 5);
+                    mHandler.postDelayed(this, 500);
+                } else {
+                    recLen = 0;
+                    progressBar.setProgress(0);
+                    img_Switch.setEnabled(true);
+                    releaseMediaRecorder();
+                    videoUri =Uri.fromFile(new File(videoPath));
+                    viewVideo(videoUri);
+                    img_Record.setImageResource(R.mipmap.outline_radio_button_checked_white_48);
+                }
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -124,11 +148,15 @@ public class RecordActivity extends Activity {
 
         img_Record = findViewById(R.id.img_Record);
         img_Switch = findViewById(R.id.img_Switch);
+        progressBar = findViewById(R.id.progressBar);
 
         img_Record.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (isRecording) {
+                    recLen = 0;
+                    progressBar.setProgress(0);
+                    img_Switch.setEnabled(true);
                     releaseMediaRecorder();
                     videoUri =Uri.fromFile(new File(videoPath));
                     viewVideo(videoUri);
@@ -136,11 +164,29 @@ public class RecordActivity extends Activity {
                 } else {
                     if (prepareVideoRecorder()) {
                         isRecording = true;
+                        img_Switch.setEnabled(false);
                         img_Record.setImageResource(R.mipmap.round_check_circle_white_48);
+                        mHandler.postDelayed(runnable,0);
                     } else {
                         releaseMediaRecorder();
                     }
                 }
+            }
+        });
+
+        img_Record.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                switch (motionEvent.getAction()){
+                    case MotionEvent.ACTION_DOWN: {
+                        img_Record.setAlpha(0.5f);
+                        break;
+                    } case MotionEvent.ACTION_UP: {
+                        img_Record.setAlpha(1f);
+                        break;
+                    }
+                }
+                return false;
             }
         });
 
@@ -152,20 +198,27 @@ public class RecordActivity extends Activity {
                 }
                 if (CAMERA_TYPE == Camera.CameraInfo.CAMERA_FACING_BACK) {
                     CAMERA_TYPE = Camera.CameraInfo.CAMERA_FACING_FRONT;
-                    mCamera = getCamera(CAMERA_TYPE);
-                } else {
+                } else if (CAMERA_TYPE == Camera.CameraInfo.CAMERA_FACING_FRONT){
                     CAMERA_TYPE = Camera.CameraInfo.CAMERA_FACING_BACK;
-                    mCamera = getCamera(CAMERA_TYPE);
                 }
-                try {
-                    rotationDegree = getCameraDisplayOrientation(Camera.CameraInfo.CAMERA_FACING_BACK);
-                    mCamera.setDisplayOrientation(rotationDegree);
-                    mCamera.setPreviewDisplay(mSurfaceHolder);
-                    mCamera.startPreview();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    releaseCameraAndPreview();
+                mCamera = getCamera(CAMERA_TYPE);
+                startPreview(mSurfaceHolder);
+            }
+        });
+
+        img_Switch.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                switch (motionEvent.getAction()){
+                    case MotionEvent.ACTION_DOWN: {
+                        img_Switch.setAlpha(0.5f);
+                        break;
+                    } case MotionEvent.ACTION_UP: {
+                        img_Switch.setAlpha(1f);
+                        break;
+                    }
                 }
+                return false;
             }
         });
     }
@@ -242,9 +295,9 @@ public class RecordActivity extends Activity {
     }
 
     private int getCameraDisplayOrientation(int cameraId) {
-        Camera.CameraInfo info =
-                new Camera.CameraInfo();
-        Camera.getCameraInfo(cameraId, info);
+        android.hardware.Camera.CameraInfo info =
+                new android.hardware.Camera.CameraInfo();
+        android.hardware.Camera.getCameraInfo(cameraId, info);
         int rotation = getWindowManager().getDefaultDisplay()
                 .getRotation();
         int degrees = 0;
@@ -301,24 +354,25 @@ public class RecordActivity extends Activity {
 
         mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
-        mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
-
-        onPauseUri = Uri.fromFile(getOutputMediaFile(MEDIA_TYPE_VIDEO));
-        videoPath = getOutputMediaFile(MEDIA_TYPE_VIDEO).toString();
-        mMediaRecorder.setOutputFile(videoPath);
-        mMediaRecorder.setPreviewDisplay(mSurfaceHolder.getSurface());
 
         switch (CAMERA_TYPE) {
             case Camera.CameraInfo.CAMERA_FACING_BACK:
                 rotationDegree = 90;
+                mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
                 break;
             case Camera.CameraInfo.CAMERA_FACING_FRONT:
                 rotationDegree = 270;
+                mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_LOW));
                 break;
             default:
                 rotationDegree = 0;
                 break;
         }
+
+        onPauseUri = Uri.fromFile(getOutputMediaFile(MEDIA_TYPE_VIDEO));
+        videoPath = getOutputMediaFile(MEDIA_TYPE_VIDEO).toString();
+        mMediaRecorder.setOutputFile(videoPath);
+        mMediaRecorder.setPreviewDisplay(mSurfaceHolder.getSurface());
         mMediaRecorder.setOrientationHint(rotationDegree);
 
         try{

@@ -12,9 +12,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.example.minidouyin.R;
+import com.example.minidouyin.activities.HomeActivity;
 import com.example.minidouyin.bean.Feed;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -54,7 +54,12 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.VH> {
                 .into(holder.imageView);
 
 //        ViewGroup.LayoutParams params = holder.imageView.getLayoutParams();
-//        params.height = feeds.get(position).getImageH();
+//        int imgH = feeds.get(position).getImageH();
+//        int imgW = feeds.get(position).getImageW();
+//
+//
+//        params.height = (int) (sScreenW / 2 * imgH / (float) imgW);
+//
 //        holder.itemView.setLayoutParams(params);
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override

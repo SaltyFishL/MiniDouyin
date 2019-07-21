@@ -25,37 +25,29 @@
         android:src="@mipmap/round_play_circle_filled_white_48"/>
 
     <LinearLayout
+        android:id="@+id/linearLayout_post"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="20dp">
 
-        <Button
-            android:id="@+id/selectCoverButton"
-            android:layout_width="100dp"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:layout_marginLeft="50dp"
-            android:layout_marginStart="50dp"
-            android:background="@color/tikTokBlack"
-            android:layout_weight="1"
-            android:text="@string/selectImage"
-            android:textColor="#ffffff"
-            android:textSize="25sp"/>
 
-        <Button
-            android:id="@+id/postVideoButton"
-            android:layout_width="100dp"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:layout_marginRight="50dp"
-            android:layout_marginEnd="50dp"
-            android:background="@color/tikTokBlack"
+        <ImageView
+            android:id="@+id/chooseImageView"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
             android:layout_weight="1"
-            android:text="@string/postVideo"
-            android:textColor="#ffffff"
-            android:textSize="25sp"/>
+            android:alpha="1"
+            android:src="@mipmap/outline_collections_white_48"/>
+
+        <ImageView
+            android:id="@+id/postImageView"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:layout_weight="1"
+            android:src="@mipmap/round_check_circle_white_48"/>
+
 
     </LinearLayout>
 

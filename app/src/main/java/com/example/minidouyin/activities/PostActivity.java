@@ -2,12 +2,19 @@ package com.example.minidouyin.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.MediaMetadata;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.transition.Transition;
 import android.transition.TransitionInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -42,10 +49,11 @@ public class PostActivity extends AppCompatActivity {
 
     private VideoView postVideoView;
     private ImageView pauseImageView;
-    private Button postVideoButton;
-    private Button selectCoverButton;
+    private ImageView chooseImageView;
+    private ImageView postImageView;
 
     private static final int CHOOSE_IMAGE = 1;
+    private boolean coverSelected = false;
 
     private String videoUriPath;
     private Uri imageUri;
@@ -62,8 +70,8 @@ public class PostActivity extends AppCompatActivity {
         videoUri = Uri.parse(videoUriPath);
 
         pauseImageView = findViewById(R.id.pauseImageView);
-        postVideoButton = findViewById(R.id.postVideoButton);
-        selectCoverButton = findViewById(R.id.selectCoverButton);
+        chooseImageView = findViewById(R.id.chooseImageView);
+        postImageView = findViewById(R.id.postImageView);
         postVideoView = findViewById(R.id.postVideoView);
         postVideoView.setVideoURI(videoUri);
 
@@ -89,17 +97,49 @@ public class PostActivity extends AppCompatActivity {
             }
         });
 
-        selectCoverButton.setOnClickListener(new View.OnClickListener() {
+        chooseImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 chooseImage();
             }
         });
 
-        postVideoButton.setOnClickListener(new View.OnClickListener() {
+        chooseImageView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                switch (motionEvent.getAction()){
+                    case MotionEvent.ACTION_DOWN: {
+                        chooseImageView.setAlpha(0.5f);
+                        break;
+                    } case MotionEvent.ACTION_UP: {
+                        chooseImageView.setAlpha(1f);
+                        break;
+                    }
+                }
+                return false;
+            }
+        });
+
+        postImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 postVideo();
+            }
+        });
+
+        postImageView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                switch (motionEvent.getAction()){
+                    case MotionEvent.ACTION_DOWN: {
+                        postImageView.setAlpha(0.5f);
+                        break;
+                    } case MotionEvent.ACTION_UP: {
+                        postImageView.setAlpha(1f);
+                        break;
+                    }
+                }
+                return false;
             }
         });
     }
@@ -120,6 +160,7 @@ public class PostActivity extends AppCompatActivity {
         Intent intent = new Intent();
         intent.setType("image/*");
         intent.setAction(Intent.ACTION_GET_CONTENT);
+        coverSelected = true;
         startActivityForResult(Intent.createChooser(intent, "Select Image"), CHOOSE_IMAGE);
     }
 
@@ -130,8 +171,13 @@ public class PostActivity extends AppCompatActivity {
     }
 
     private void postVideo() {
-        postVideoButton.setText(R.string.posting);
-        postVideoButton.setEnabled(false);
+        Toast.makeText(PostActivity.this,R.string.posting,Toast.LENGTH_LONG).show();
+        postImageView.setEnabled(false);
+        chooseImageView.setEnabled(false);
+
+        if(coverSelected == false) {
+            imageUri = autoCover();
+        }
 
         Retrofit retrofit = RetrofitManager.get("http://test.androidcamp.bytedance.com/");
         Call<PostResponse> call = retrofit.create(IMiniDouyinService.class).createVideo("123456","puppy",
@@ -140,8 +186,8 @@ public class PostActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<PostResponse> call, Response<PostResponse> response) {
                 Toast.makeText(PostActivity.this,R.string.postSuccess,Toast.LENGTH_LONG).show();
-                postVideoButton.setText(R.string.post);
-                postVideoButton.setEnabled(true);
+                postImageView.setEnabled(true);
+                chooseImageView.setEnabled(true);
                 startActivity(new Intent(PostActivity.this,HomeActivity.class));
             }
 
@@ -150,5 +196,13 @@ public class PostActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    private Uri autoCover() {
+        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+        mmr.setDataSource(this,videoUri);
+        Bitmap bitmap = mmr.getFrameAtTime();
+        Uri uri = Uri.parse(MediaStore.Images.Media.insertImage(getContentResolver(),bitmap , null,null));
+        return uri;
     }
 }

@@ -1,6 +1,8 @@
 package com.example.minidouyin.activities;
 
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.WindowManager;
 
 import androidx.fragment.app.Fragment;
 
@@ -10,9 +12,11 @@ public class HomeActivity extends AbstractSingleFragmentActivity {
 
     private static final String TAG = "HomeActivity";
 
+
     @Override
     protected Fragment createFragment() {
         Log.d(TAG, "createFragment: ");
+
         return new HomeFragment();
     }
 

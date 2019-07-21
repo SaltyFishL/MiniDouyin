@@ -91,7 +91,7 @@ public class HomeFragment extends Fragment implements FeedAdapter.OnItemClicked 
         });
 
         mRecyclerView = getActivity().findViewById(R.id.recycler_view);
-        //设置网格布局管理器 TODO 换成瀑布?
+        //设置网格布局管理器
         GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(), SPAN_COUNT);
         //设置排列方式 纵向排列
         gridLayoutManager.setOrientation(RecyclerView.VERTICAL);
