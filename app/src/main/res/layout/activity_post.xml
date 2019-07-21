@@ -24,6 +24,26 @@
         android:visibility="invisible"
         android:src="@mipmap/round_play_circle_filled_white_48"/>
 
+    <ImageView
+        android:id="@+id/returnImageView"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginTop="40dp"
+        android:layout_marginLeft="40dp"
+        android:src="@mipmap/round_backspace_white_48"/>
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/uploading"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_centerInParent="true"
+        app:lottie_rawRes="@raw/uploading"
+        app:lottie_autoPlay="true"
+        android:visibility="invisible"
+        app:lottie_loop="true"/>
+
     <LinearLayout
         android:id="@+id/linearLayout_post"
         android:layout_width="match_parent"

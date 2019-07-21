@@ -1,6 +1,8 @@
 package com.example.minidouyin.fragments;
 
 import android.annotation.SuppressLint;
+import android.content.ContentValues;
+import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
@@ -10,7 +12,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,8 +19,10 @@ import androidx.fragment.app.Fragment;
 
 import com.airbnb.lottie.LottieAnimationView;
 import com.example.minidouyin.R;
+import com.example.minidouyin.activities.FeedPagerActivity;
 import com.example.minidouyin.bean.Feed;
 import com.example.minidouyin.bean.FeedLab;
+import com.example.minidouyin.db.TikTokContract;
 import com.example.minidouyin.views.FullScreenVideoView;
 
 /**
@@ -38,8 +41,6 @@ public class FeedFragment extends Fragment {
     private LottieAnimationView mHeart;
     private ImageView mPlayImage;
     private Feed mFeed;
-
-//    private TextView mTextView;
 
     public static FeedFragment newInstance(int position) {
         Bundle args = new Bundle();
@@ -69,16 +70,14 @@ public class FeedFragment extends Fragment {
         mVideoView = view.findViewById(R.id.video_view);
         mPlayImage = view.findViewById(R.id.play_image);
         mLoading = view.findViewById(R.id.loading);
-//        mHeart.setAnimation(R.raw.heart);
         mHeart = view.findViewById(R.id.heart);
         mHeart.setRepeatCount(0);
-//        mHeart = view.findViewById(R.id.heart);
 
         mVideoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
 
-//                //TODO 循环播放 有问题
+//                //TODO 设置为暂停比较好 试试stop还是pause
 //                mVideoView.seekTo(0);
 //                mVideoView.start();
                 mediaPlayer.setLooping(true);
@@ -91,6 +90,11 @@ public class FeedFragment extends Fragment {
             @Override
             public void onPrepared(MediaPlayer mediaPlayer) {
                 mLoading.setVisibility(View.GONE);
+                //TODO 判断数据库中有没有like
+                if (isExistLike(mFeed)) {
+                    mHeart.setVisibility(View.VISIBLE);
+                    mHeart.setProgress(1f);
+                }
             }
         });
 
@@ -108,11 +112,22 @@ public class FeedFragment extends Fragment {
 
             @Override
             public void doubleClick() {
-                //TODO 处理doubleClick事件
-                mHeart.setVisibility(View.VISIBLE);
-                mHeart.playAnimation();
+                //TODO 处理doubleClick事件 添加onScroll事件
+                if (mHeart.getVisibility() == View.INVISIBLE) {
+                    mHeart.setVisibility(View.VISIBLE);
+                    mHeart.playAnimation();
+                    //TODO 添加进入数据库
+                    saveLike2Database(mFeed);
+                } else {
+                    mHeart.setVisibility(View.INVISIBLE);
+                    //TODO 删除数据库中的like
+                    deleteLike(mFeed);
+                }
+
+//                这是修改之前的代码
 //                mHeart.setVisibility(View.INVISIBLE);
 //                mHeart.playAnimation();
+
             }
         }));
 
@@ -133,6 +148,68 @@ public class FeedFragment extends Fragment {
         });
 
         return view;
+    }
+
+    private boolean saveLike2Database(Feed feed) {
+        if (FeedPagerActivity.sDatabase == null || feed == null) {
+            return false;
+        }
+        ContentValues values = new ContentValues();
+        values.put(TikTokContract.FeedLike.COLUMN_ID, feed.getId());
+        values.put(TikTokContract.FeedLike.COLUMN_IMG_URL, feed.getImageUrl());
+        values.put(TikTokContract.FeedLike.COLUMN_STUDENT_ID, feed.getStudentId());
+        values.put(TikTokContract.FeedLike.COLUMN_USER_NAME, feed.getUserName());
+        values.put(TikTokContract.FeedLike.COLUMN_VIDEO_URL, feed.getVideoUrl());
+
+        long rowId = FeedPagerActivity.sDatabase.insert(TikTokContract.FeedLike.TABLE_NAME,
+                null, values);
+        return rowId != -1;
+    }
+
+    private void deleteLike(Feed feed) {
+        if (FeedPagerActivity.sDatabase == null) {
+            return;
+        }
+
+        FeedPagerActivity.sDatabase.delete(
+                TikTokContract.FeedLike.TABLE_NAME,
+                TikTokContract.FeedLike.COLUMN_ID + "=?",
+                new String[]{feed.getId()}
+        );
+
+    }
+
+    private boolean isExistLike(Feed feed) {
+        if (FeedPagerActivity.sDatabase == null) {
+            return false;
+        }
+
+        boolean isExist = false;
+
+        Cursor cursor = null;
+
+        try {
+            cursor = FeedPagerActivity.sDatabase.query(
+                    TikTokContract.FeedLike.TABLE_NAME,
+                    null,
+                    TikTokContract.FeedLike.COLUMN_ID + "=?",
+                    new String[]{feed.getId()},
+                    null,
+                    null,
+                    null
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null && cursor.getCount() > 0) {
+                isExist = true;
+            }
+
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return isExist;
     }
 
     static class MyClickListener implements View.OnTouchListener {
@@ -156,10 +233,13 @@ public class FeedFragment extends Fragment {
         public boolean onTouch(View view, MotionEvent motionEvent) {
             if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                 clickCount++;
+
+
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         if (clickCount == 1) {
+                            //TODO 这里和左右滑动有冲突
                             clickCallBack.oneClick();
                         } else {
                             clickCallBack.doubleClick();
@@ -168,6 +248,8 @@ public class FeedFragment extends Fragment {
                         clickCount = 0;
                     }
                 }, timeout);
+
+
             }
             return false;
         }

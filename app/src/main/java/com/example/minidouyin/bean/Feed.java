@@ -22,6 +22,8 @@ public class Feed {
     private int mImageW;
     @SerializedName("image_h")
     private int mImageH;
+    @SerializedName("_id")
+    private String mId;
 
 //    private UUID mId;
 
@@ -67,6 +69,10 @@ public class Feed {
 
     public int getImageH() {
         return mImageH;
+    }
+
+    public String getId() {
+        return mId;
     }
 
     //    public UUID getId() {

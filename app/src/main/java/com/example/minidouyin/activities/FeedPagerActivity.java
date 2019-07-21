@@ -1,9 +1,8 @@
 package com.example.minidouyin.activities;
 
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,6 +15,7 @@ import androidx.viewpager.widget.ViewPager;
 import com.example.minidouyin.R;
 import com.example.minidouyin.bean.Feed;
 import com.example.minidouyin.bean.FeedLab;
+import com.example.minidouyin.db.TikTokDbHelper;
 import com.example.minidouyin.fragments.FeedFragment;
 
 import java.util.List;
@@ -31,12 +31,20 @@ public class FeedPagerActivity extends FragmentActivity {
     private List<Feed> mFeeds;
     private int mPosition;
 
+    public static TikTokDbHelper sDbHelper;
+    public static SQLiteDatabase sDatabase;
+
     private final String TAG = "FeedPagerActivity";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mPosition = getIntent().getIntExtra(FeedFragment.EXTRA_FEED_POSITION, 0);
+
+        sDbHelper = new TikTokDbHelper(this);
+        sDatabase = sDbHelper.getWritableDatabase();
+
+
         mViewPager = new ViewPager(this);
         mViewPager.setId(R.id.view_pager);
         Log.d(TAG, "onCreate: mPosition = " + mPosition);
@@ -62,5 +70,14 @@ public class FeedPagerActivity extends FragmentActivity {
         });
 
         mViewPager.setCurrentItem(mPosition);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        sDatabase.close();
+        sDatabase = null;
+        sDbHelper.close();
+        sDbHelper = null;
     }
 }

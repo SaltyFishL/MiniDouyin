@@ -64,6 +64,7 @@ public class RecordActivity extends Activity {
 
     private ImageView img_Record;
     private ImageView img_Switch;
+    private ImageView img_Back;
     private ProgressBar progressBar;
 
     private Handler mHandler= new Handler();
@@ -148,6 +149,7 @@ public class RecordActivity extends Activity {
 
         img_Record = findViewById(R.id.img_Record);
         img_Switch = findViewById(R.id.img_Switch);
+        img_Back = findViewById(R.id.img_Back);
         progressBar = findViewById(R.id.progressBar);
 
         img_Record.setOnClickListener(new View.OnClickListener() {
@@ -215,6 +217,29 @@ public class RecordActivity extends Activity {
                         break;
                     } case MotionEvent.ACTION_UP: {
                         img_Switch.setAlpha(1f);
+                        break;
+                    }
+                }
+                return false;
+            }
+        });
+
+        img_Back.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(RecordActivity.this,HomeActivity.class));
+            }
+        });
+
+        img_Back.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                switch (motionEvent.getAction()){
+                    case MotionEvent.ACTION_DOWN: {
+                        img_Back.setAlpha(0.5f);
+                        break;
+                    } case MotionEvent.ACTION_UP: {
+                        img_Back.setAlpha(1f);
                         break;
                     }
                 }
@@ -473,5 +498,4 @@ public class RecordActivity extends Activity {
         intent.setData(onPauseUri);
         this.sendBroadcast(intent);
     }
-
 }

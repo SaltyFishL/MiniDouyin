@@ -9,22 +9,13 @@
     android:background="@color/tikTokBlack"
     tools:context=".fragments.UploadDialogFragment">
 
-
-    <TextView
-        android:id="@+id/upLoadTextView"
-        android:layout_width="300dp"
-        android:layout_height="50dp"
-        android:background="@color/tikTokBlack"
-        android:layout_gravity="center"
-        android:gravity="center"
-        android:text="@string/postVideo"
-        android:textSize="20dp"
-        android:textColor="#ffffff"/>
-
     <Button
         android:id="@+id/upLoadButton_Record"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
         android:layout_gravity="center"
         android:gravity="center"
         android:text="@string/record"
@@ -35,7 +26,9 @@
         android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:paddingTop="10dp"
-        android:layout_marginBottom="30dp"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
         android:layout_gravity="center"
         android:gravity="center"
         android:text="@string/selectVideo"

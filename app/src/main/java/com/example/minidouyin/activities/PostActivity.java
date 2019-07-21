@@ -2,27 +2,21 @@ package com.example.minidouyin.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.media.MediaMetadata;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.MediaStore;
-import android.transition.Transition;
-import android.transition.TransitionInflater;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.example.minidouyin.R;
 import com.example.minidouyin.utils.ResourceUtils;
 import com.example.minidouyin.bean.PostResponse;
@@ -49,15 +43,19 @@ public class PostActivity extends AppCompatActivity {
 
     private VideoView postVideoView;
     private ImageView pauseImageView;
+    private ImageView returnImageView;
     private ImageView chooseImageView;
     private ImageView postImageView;
+    private LottieAnimationView uploadAnim;
 
     private static final int CHOOSE_IMAGE = 1;
     private boolean coverSelected = false;
+    private boolean isUploading = false;
 
     private String videoUriPath;
     private Uri imageUri;
     private Uri videoUri;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,9 +68,11 @@ public class PostActivity extends AppCompatActivity {
         videoUri = Uri.parse(videoUriPath);
 
         pauseImageView = findViewById(R.id.pauseImageView);
+        returnImageView = findViewById(R.id.returnImageView);
         chooseImageView = findViewById(R.id.chooseImageView);
         postImageView = findViewById(R.id.postImageView);
         postVideoView = findViewById(R.id.postVideoView);
+        uploadAnim = findViewById(R.id.uploading);
         postVideoView.setVideoURI(videoUri);
 
         postVideoView.start();
@@ -82,7 +82,9 @@ public class PostActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if(postVideoView.isPlaying()){
                     postVideoView.pause();
-                    pauseImageView.setVisibility(View.VISIBLE);
+                    if(!isUploading) {
+                        pauseImageView.setVisibility(View.VISIBLE);
+                    }
                 } else{
                     postVideoView.start();
                     pauseImageView.setVisibility(View.INVISIBLE);
@@ -94,6 +96,29 @@ public class PostActivity extends AppCompatActivity {
             @Override
             public void onCompletion(MediaPlayer mediaPlayer) {
                 postVideoView.start();
+            }
+        });
+
+        returnImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(PostActivity.this,HomeActivity.class));
+            }
+        });
+
+        returnImageView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                switch (motionEvent.getAction()){
+                    case MotionEvent.ACTION_DOWN: {
+                        returnImageView.setAlpha(0.5f);
+                        break;
+                    } case MotionEvent.ACTION_UP: {
+                        returnImageView.setAlpha(1f);
+                        break;
+                    }
+                }
+                return false;
             }
         });
 
@@ -174,6 +199,8 @@ public class PostActivity extends AppCompatActivity {
         Toast.makeText(PostActivity.this,R.string.posting,Toast.LENGTH_LONG).show();
         postImageView.setEnabled(false);
         chooseImageView.setEnabled(false);
+        uploadAnim.setVisibility(View.VISIBLE);
+        isUploading = true;
 
         if(coverSelected == false) {
             imageUri = autoCover();
@@ -188,6 +215,7 @@ public class PostActivity extends AppCompatActivity {
                 Toast.makeText(PostActivity.this,R.string.postSuccess,Toast.LENGTH_LONG).show();
                 postImageView.setEnabled(true);
                 chooseImageView.setEnabled(true);
+                uploadAnim.setVisibility(View.INVISIBLE);
                 startActivity(new Intent(PostActivity.this,HomeActivity.class));
             }
 
@@ -205,4 +233,5 @@ public class PostActivity extends AppCompatActivity {
         Uri uri = Uri.parse(MediaStore.Images.Media.insertImage(getContentResolver(),bitmap , null,null));
         return uri;
     }
+
 }
