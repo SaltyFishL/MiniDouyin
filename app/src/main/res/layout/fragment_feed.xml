@@ -13,17 +13,32 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-    <!--<com.airbnb.lottie.LottieAnimationView-->
-        <!--android:id="@+id/heart_animation"-->
-        <!--android:scaleY="2"-->
-        <!--android:scaleX="2"-->
-        <!--app:layout_constraintBottom_toBottomOf="parent"-->
-        <!--app:layout_constraintEnd_toEndOf="parent"-->
-        <!--app:layout_constraintTop_toTopOf="parent"-->
-        <!--app:lottie_autoPlay="true"-->
-        <!--app:lottie_loop="true"-->
-        <!--app:lottie_rawRes="@raw/heart"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_width="wrap_content"/>-->
+
+    <ImageView
+        android:id="@+id/play_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        android:src="@mipmap/round_play_circle_filled_white_48"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/ijkplayer" />
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:scaleX="2"
+        android:scaleY="2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:lottie_rawRes="@raw/heart"
+        app:lottie_loop="true"
+        app:lottie_autoPlay="true"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
