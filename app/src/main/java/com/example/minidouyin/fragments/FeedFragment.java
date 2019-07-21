@@ -73,23 +73,13 @@ public class FeedFragment extends Fragment {
         mHeart = view.findViewById(R.id.heart);
         mHeart.setRepeatCount(0);
 
-        mVideoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-
-//                //TODO 设置为暂停比较好 试试stop还是pause
-//                mVideoView.seekTo(0);
-//                mVideoView.start();
-                mediaPlayer.setLooping(true);
-                mediaPlayer.start();
-
-            }
-        });
+        mVideoView.setVideoPath(mFeed.getVideoUrl().replaceFirst("https", "http"));
 
         mVideoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mediaPlayer) {
                 mLoading.setVisibility(View.GONE);
+                mPlayImage.setVisibility(View.VISIBLE);
                 //TODO 判断数据库中有没有like
                 if (isExistLike(mFeed)) {
                     mHeart.setVisibility(View.VISIBLE);
@@ -129,10 +119,22 @@ public class FeedFragment extends Fragment {
 //                mHeart.playAnimation();
 
             }
+
+            @Override
+            public void onScroll() {
+                mVideoView.pause();
+                mPlayImage.setVisibility(View.VISIBLE);
+            }
         }));
 
-        mVideoView.setVideoPath(mFeed.getVideoUrl().replaceFirst("https", "http"));
-        mVideoView.start();
+        mVideoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                mediaPlayer.setLooping(false);
+                mPlayImage.setVisibility(View.VISIBLE);
+            }
+        });
+
 
         mPlayImage.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -214,14 +216,17 @@ public class FeedFragment extends Fragment {
 
     static class MyClickListener implements View.OnTouchListener {
 
-        private int timeout = 400;
+        private int timeout = 300;
         private int clickCount = 0;
         private Handler handler;
         private ClickCallBack clickCallBack;
+        private float initX = 0;
 
         public interface ClickCallBack {
             void oneClick();
             void doubleClick();
+
+            void onScroll();
         }
 
         public MyClickListener(ClickCallBack clickCallBack) {
@@ -233,14 +238,20 @@ public class FeedFragment extends Fragment {
         public boolean onTouch(View view, MotionEvent motionEvent) {
             if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
                 clickCount++;
-
+                if (clickCount == 1) {
+                    initX = motionEvent.getRawX();
+                }
 
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         if (clickCount == 1) {
-                            //TODO 这里和左右滑动有冲突
-                            clickCallBack.oneClick();
+                            //TODO 冲突解决了
+                            if (Math.abs(motionEvent.getRawX() - initX) > 50) {
+                                clickCallBack.onScroll();
+                            } else {
+                                clickCallBack.oneClick();
+                            }
                         } else {
                             clickCallBack.doubleClick();
                         }
