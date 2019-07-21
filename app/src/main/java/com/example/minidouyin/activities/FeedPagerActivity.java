@@ -39,8 +39,7 @@ public class FeedPagerActivity extends FragmentActivity {
         mPosition = getIntent().getIntExtra(FeedFragment.EXTRA_FEED_POSITION, 0);
         mViewPager = new ViewPager(this);
         mViewPager.setId(R.id.view_pager);
-
-        mViewPager.setCurrentItem(mPosition);
+        Log.d(TAG, "onCreate: mPosition = " + mPosition);
 
 //        Toast.makeText(this, "position = " + mPosition, Toast.LENGTH_SHORT).show();
 
@@ -61,5 +60,7 @@ public class FeedPagerActivity extends FragmentActivity {
                 return mFeeds.size();
             }
         });
+
+        mViewPager.setCurrentItem(mPosition);
     }
 }

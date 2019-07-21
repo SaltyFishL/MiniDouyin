@@ -18,6 +18,10 @@ public class Feed {
     private String mImageUrl;
     @SerializedName("video_url")
     private String mVideoUrl;
+    @SerializedName("image_w")
+    private int mImageW;
+    @SerializedName("image_h")
+    private int mImageH;
 
 //    private UUID mId;
 
@@ -57,7 +61,15 @@ public class Feed {
         mVideoUrl = videoUrl;
     }
 
-//    public UUID getId() {
+    public int getImageW() {
+        return mImageW;
+    }
+
+    public int getImageH() {
+        return mImageH;
+    }
+
+    //    public UUID getId() {
 //        return mId;
 //    }
 

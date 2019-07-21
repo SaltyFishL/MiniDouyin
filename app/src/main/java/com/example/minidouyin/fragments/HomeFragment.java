@@ -14,6 +14,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.minidouyin.R;
@@ -82,7 +83,6 @@ public class HomeFragment extends Fragment implements FeedAdapter.OnItemClicked 
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //TODO 添加视频
                 FragmentManager fm = getFragmentManager();
                 if (fm != null) {
                     mUploadDialogFragment.show(fm, "UploadDialog");
@@ -97,8 +97,10 @@ public class HomeFragment extends Fragment implements FeedAdapter.OnItemClicked 
         gridLayoutManager.setOrientation(RecyclerView.VERTICAL);
         //引用网格布局
         mRecyclerView.setLayoutManager(gridLayoutManager);
-        fetchFeeds();
 
+//        mRecyclerView.setLayoutManager(new StaggeredGridLayoutManager(SPAN_COUNT, StaggeredGridLayoutManager.VERTICAL));//设置RecyclerView布局管理器为2列垂直排布
+
+        fetchFeeds();
     }
 
     private void fetchFeeds() {

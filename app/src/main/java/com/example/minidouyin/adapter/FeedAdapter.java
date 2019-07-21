@@ -53,6 +53,9 @@ public class FeedAdapter extends RecyclerView.Adapter<FeedAdapter.VH> {
                 .override(250, 350)
                 .into(holder.imageView);
 
+//        ViewGroup.LayoutParams params = holder.imageView.getLayoutParams();
+//        params.height = feeds.get(position).getImageH();
+//        holder.itemView.setLayoutParams(params);
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
