@@ -26,6 +26,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".activities.RecordActivity" />
+        <activity android:name=".activities.PostActivity" />
         <activity
             android:name=".activities.FeedPagerActivity"
             android:screenOrientation="portrait" />

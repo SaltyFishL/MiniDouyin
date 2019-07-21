@@ -16,16 +16,14 @@ public class FeedLab {
     private static FeedLab sFeedLab;
     private static final String TAG = "FeedLab";
 
-    private Context mContext;
 
-    private FeedLab(Context appContext) {
-        mContext = appContext;
+    private FeedLab() {
         mFeeds = new ArrayList<>();
     }
 
-    public static FeedLab get(Context context) {
+    public static FeedLab get() {
         if (sFeedLab == null) {
-            sFeedLab = new FeedLab(context.getApplicationContext());
+            sFeedLab = new FeedLab();
         }
 
         return sFeedLab;

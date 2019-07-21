@@ -1,4 +1,4 @@
-package com.example.minidouyin.Utils;
+package com.example.minidouyin.utils;
 
 import android.annotation.SuppressLint;
 import android.content.ContentUris;

@@ -46,7 +46,7 @@ public class FeedPagerActivity extends FragmentActivity {
 
         setContentView(mViewPager);
 
-        mFeeds = FeedLab.get(this).getFeeds();
+        mFeeds = FeedLab.get().getFeeds();
 
         FragmentManager fm = getSupportFragmentManager();
         mViewPager.setAdapter(new FragmentStatePagerAdapter(fm) {

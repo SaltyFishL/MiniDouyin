@@ -10,11 +10,15 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.example.minidouyin.R;
@@ -38,15 +42,27 @@ import static android.provider.MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO;
 public class RecordActivity extends Activity {
 
     private SurfaceView mSurfaceView;
+    private SurfaceHolder mSurfaceHolder;
     private Camera mCamera;
     private Camera.Parameters parameters;
 
     private int CAMERA_TYPE = Camera.CameraInfo.CAMERA_FACING_BACK;
+    private int rotationDegree = 0;
+    private static final int DEGREE_90 = 90;
+    private static final int DEGREE_180 = 180;
+    private static final int DEGREE_270 = 270;
+    private static final int DEGREE_360 = 360;
+
+    private float oldDist = 1f;
 
     private boolean isRecording = false;
-    private boolean flag = false;
 
-    private int rotationDegree = 0;
+    private Uri onPauseUri;
+    private Uri videoUri;
+    private String videoPath;
+
+    private ImageView img_Record;
+    private ImageView img_Switch;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,22 +71,19 @@ public class RecordActivity extends Activity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_record);
-
         releaseCameraAndPreview();
-        mCamera = getCamera(CAMERA_TYPE);
-        mSurfaceView = findViewById(R.id.img);
-        rotationDegree = getCameraDisplayOrientation(CAMERA_TYPE);
-        mCamera.setDisplayOrientation(rotationDegree);
 
-        //todo 给SurfaceHolder添加Callback
-        SurfaceHolder surfaceHolder = mSurfaceView.getHolder();
-        surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-        surfaceHolder.addCallback(new SurfaceHolder.Callback() {
+        mSurfaceView = findViewById(R.id.img);
+        mSurfaceHolder = mSurfaceView.getHolder();
+        mSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+        mSurfaceHolder.addCallback(new SurfaceHolder.Callback() {
             @Override
             public void surfaceCreated(SurfaceHolder holder) {
+                mCamera = getCamera(CAMERA_TYPE);
+                rotationDegree = getCameraDisplayOrientation(CAMERA_TYPE);
+                mCamera.setDisplayOrientation(rotationDegree);
                 try {
-                    mCamera.setPreviewDisplay(holder);
-                    mCamera.startPreview();
+                    startPreview(holder);
                 } catch (Exception e){
                     e.printStackTrace();
                     releaseCameraAndPreview();
@@ -79,89 +92,133 @@ public class RecordActivity extends Activity {
 
             @Override
             public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+                if (holder.getSurface() == null) {
+                    return;
+                }
+                try {
+                    mCamera.stopPreview();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    parameters = mCamera.getParameters();
+                    List<Camera.Size> sizes = parameters.getSupportedPreviewSizes();
+                    Camera.Size optimalSize = getOptimalPreviewSize(sizes, width, height);
+                    parameters.setPreviewSize(optimalSize.width, optimalSize.height);
+                    mCamera.setParameters(parameters);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                startPreview(holder);
 
             }
 
             @Override
             public void surfaceDestroyed(SurfaceHolder holder) {
-                releaseCameraAndPreview();
-            }
-        });
-
-        findViewById(R.id.btn_picture).setOnClickListener(v -> {
-            //todo 拍一张照片
-            parameters = mCamera.getParameters();
-            parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
-            mCamera.autoFocus(new Camera.AutoFocusCallback() {
-                @Override
-                public void onAutoFocus(boolean success, Camera camera) {
-                    if(success){
-                        mCamera.takePicture(null,null,mPicture);
-                    }
-                }
-            });
-        });
-
-        findViewById(R.id.btn_record).setOnClickListener(v -> {
-            //todo 录制，第一次点击是start，第二次点击是stop
-            if (isRecording) {
-                //todo 停止录制
                 releaseMediaRecorder();
-                isRecording = false;
-            } else {
-                //todo 录制
-                if (prepareVideoRecorder()) {
-                    mMediaRecorder.start();
-                    isRecording = true;
-                } else {
-                    releaseMediaRecorder();
-                }
-            }
-        });
-
-        findViewById(R.id.btn_facing).setOnClickListener(v -> {
-            //todo 切换前后摄像头
-            if (mCamera == null) {
-                return;
-            }
-            if (CAMERA_TYPE == Camera.CameraInfo.CAMERA_FACING_BACK) {
-                CAMERA_TYPE = Camera.CameraInfo.CAMERA_FACING_FRONT;
-                mCamera = getCamera(CAMERA_TYPE);
-            } else {
-                CAMERA_TYPE = Camera.CameraInfo.CAMERA_FACING_BACK;
-                mCamera = getCamera(CAMERA_TYPE);
-            }
-            try {
-                rotationDegree = getCameraDisplayOrientation(Camera.CameraInfo.CAMERA_FACING_BACK);
-                mCamera.setDisplayOrientation(rotationDegree);
-                mCamera.setPreviewDisplay(surfaceHolder);
-                mCamera.startPreview();
-            } catch (IOException e) {
-                e.printStackTrace();
                 releaseCameraAndPreview();
             }
         });
 
-        findViewById(R.id.btn_zoom).setOnClickListener(v -> {
-            //todo 调焦，需要判断手机是否支持
-            if (mCamera != null) {
-                parameters = mCamera.getParameters();
-                if (parameters.isZoomSupported()) {
-                    int maxZoom = parameters.getMaxZoom();
-                    int mZoom = parameters.getZoom();
-                    if (mZoom < maxZoom) {
-                        mZoom += 40;
-                        if (mZoom > maxZoom) {
-                            mZoom = maxZoom;
-                        }
-                        parameters.setZoom(mZoom);
-                    } else{
-                        parameters.setZoom(0);
+        img_Record = findViewById(R.id.img_Record);
+        img_Switch = findViewById(R.id.img_Switch);
+
+        img_Record.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (isRecording) {
+                    releaseMediaRecorder();
+                    videoUri =Uri.fromFile(new File(videoPath));
+                    viewVideo(videoUri);
+                    img_Record.setImageResource(R.mipmap.outline_radio_button_checked_white_48);
+                } else {
+                    if (prepareVideoRecorder()) {
+                        isRecording = true;
+                        img_Record.setImageResource(R.mipmap.round_check_circle_white_48);
+                    } else {
+                        releaseMediaRecorder();
                     }
                 }
-                mCamera.setParameters(parameters);
             }
         });
+
+        img_Switch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mCamera == null) {
+                    return;
+                }
+                if (CAMERA_TYPE == Camera.CameraInfo.CAMERA_FACING_BACK) {
+                    CAMERA_TYPE = Camera.CameraInfo.CAMERA_FACING_FRONT;
+                    mCamera = getCamera(CAMERA_TYPE);
+                } else {
+                    CAMERA_TYPE = Camera.CameraInfo.CAMERA_FACING_BACK;
+                    mCamera = getCamera(CAMERA_TYPE);
+                }
+                try {
+                    rotationDegree = getCameraDisplayOrientation(Camera.CameraInfo.CAMERA_FACING_BACK);
+                    mCamera.setDisplayOrientation(rotationDegree);
+                    mCamera.setPreviewDisplay(mSurfaceHolder);
+                    mCamera.startPreview();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    releaseCameraAndPreview();
+                }
+            }
+        });
+    }
+
+
+    //TODO
+    private static float getFingerDistance(MotionEvent event) {
+        float x = event.getX(0) - event.getX(1);
+        float y = event.getY(0) - event.getY(1);
+        return (float) Math.sqrt(x * x + y * y);
+    }
+
+    private void cameraZoom(boolean isZoomIn, Camera camera) {
+        parameters = camera.getParameters();
+        if (parameters.isZoomSupported()) {
+            int maxZoom = parameters.getMaxZoom();
+            int currentZoom = parameters.getZoom();
+            if (isZoomIn && currentZoom < maxZoom) {
+                currentZoom+=2;
+                if (currentZoom > maxZoom) {
+                    currentZoom = maxZoom;
+                }
+            } else if (currentZoom > 0) {
+                currentZoom-=2;
+                if (currentZoom < 0) {
+                    currentZoom = 0;
+                }
+            }
+            parameters.setZoom(currentZoom);
+            camera.setParameters(parameters);
+        }
+    }
+
+    public boolean onTouchEvent(MotionEvent event) {
+        if (event.getPointerCount() == 1) {
+            return true;
+        } else {
+            switch (event.getAction() & MotionEvent.ACTION_MASK) {
+                case MotionEvent.ACTION_POINTER_DOWN:
+                    oldDist = getFingerDistance(event);
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    float newDist = getFingerDistance(event);
+                    if (newDist > oldDist) {
+                        cameraZoom(true, mCamera);
+                    } else if (newDist < oldDist) {
+                        cameraZoom(false, mCamera);
+                    }
+                    oldDist = newDist;
+                    break;
+            }
+        }
+        return true;
     }
 
     public Camera getCamera(int position) {
@@ -170,18 +227,19 @@ public class RecordActivity extends Activity {
             releaseCameraAndPreview();
         }
         Camera cam = Camera.open(position);
-        //todo 摄像头添加属性，例是否自动对焦，设置旋转方向等
+
         rotationDegree = getCameraDisplayOrientation(position);
         cam.setDisplayOrientation(rotationDegree);
 
+        parameters = cam.getParameters();
+        List<String> focusModes = parameters.getSupportedFocusModes();
+        if (focusModes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO)) {
+            Camera.Parameters mParameters = cam.getParameters();
+            mParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+            cam.setParameters(mParameters);
+        }
         return cam;
     }
-
-
-    private static final int DEGREE_90 = 90;
-    private static final int DEGREE_180 = 180;
-    private static final int DEGREE_270 = 270;
-    private static final int DEGREE_360 = 360;
 
     private int getCameraDisplayOrientation(int cameraId) {
         Camera.CameraInfo info =
@@ -217,9 +275,7 @@ public class RecordActivity extends Activity {
         return result;
     }
 
-
     private void releaseCameraAndPreview() {
-        //todo 释放camera资源
         if(mCamera != null) {
             mCamera.stopPreview();
             mCamera.release();
@@ -227,65 +283,76 @@ public class RecordActivity extends Activity {
         }
     }
 
-    Camera.Size size;
-
     private void startPreview(SurfaceHolder holder) {
-        //todo 开始预览
-        mCamera.startPreview();
+        try{
+            mCamera.setPreviewDisplay(holder);
+            mCamera.startPreview();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
-
 
     private MediaRecorder mMediaRecorder;
 
     private boolean prepareVideoRecorder() {
-        //todo 准备MediaRecorder
         mMediaRecorder = new MediaRecorder();
         mCamera.unlock();
         mMediaRecorder.setCamera(mCamera);
+
         mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
         mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
-        mMediaRecorder.setOutputFile(getOutputMediaFile(MEDIA_TYPE_VIDEO).toString());
-        mMediaRecorder.setPreviewDisplay(mSurfaceView.getHolder().getSurface());
+
+        onPauseUri = Uri.fromFile(getOutputMediaFile(MEDIA_TYPE_VIDEO));
+        videoPath = getOutputMediaFile(MEDIA_TYPE_VIDEO).toString();
+        mMediaRecorder.setOutputFile(videoPath);
+        mMediaRecorder.setPreviewDisplay(mSurfaceHolder.getSurface());
+
+        switch (CAMERA_TYPE) {
+            case Camera.CameraInfo.CAMERA_FACING_BACK:
+                rotationDegree = 90;
+                break;
+            case Camera.CameraInfo.CAMERA_FACING_FRONT:
+                rotationDegree = 270;
+                break;
+            default:
+                rotationDegree = 0;
+                break;
+        }
         mMediaRecorder.setOrientationHint(rotationDegree);
 
         try{
             mMediaRecorder.prepare();
+            mMediaRecorder.start();
         } catch (Exception e){
+            releaseMediaRecorder();
             e.printStackTrace();
             return false;
         }
         return true;
     }
 
-
     private void releaseMediaRecorder() {
-        //todo 释放MediaRecorder
+        if(mMediaRecorder == null){
+            return;
+        }
         mMediaRecorder.stop();
         mMediaRecorder.reset();
         mMediaRecorder.release();
         mMediaRecorder = null;
         mCamera.lock();
         isRecording = false;
+
+        sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,Uri.fromFile(new File(videoPath))));
     }
 
-
-    private Camera.PictureCallback mPicture = (data, camera) -> {
-        File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
-        if (pictureFile == null) {
-            return;
-        }
-        try {
-            FileOutputStream fos = new FileOutputStream(pictureFile);
-            fos.write(data);
-            fos.close();
-        } catch (IOException e) {
-            Log.d("mPicture", "Error accessing file: " + e.getMessage());
-        }
-
-        mCamera.startPreview();
-    };
-
+    private void viewVideo(Uri uri){
+        String videoUriPath =uri.toString();
+        Intent intent = new Intent();
+        intent.setClass(RecordActivity.this,PostActivity.class);
+        intent.putExtra("videoUri",videoUriPath);
+        startActivity(intent);
+    }
 
     private Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, int w, int h) {
         final double ASPECT_TOLERANCE = 0.1;
@@ -321,7 +388,7 @@ public class RecordActivity extends Activity {
 
     public static File getOutputMediaFile(int type) {
         File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_DCIM), "miniDouyin");
+                Environment.DIRECTORY_DCIM), "Camera");
         if (!mediaStorageDir.exists()) {
             if (!mediaStorageDir.mkdirs()) {
                 return null;
@@ -342,6 +409,15 @@ public class RecordActivity extends Activity {
         }
 
         return mediaFile;
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        releaseMediaRecorder();
+        Intent intent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        intent.setData(onPauseUri);
+        this.sendBroadcast(intent);
     }
 
 }

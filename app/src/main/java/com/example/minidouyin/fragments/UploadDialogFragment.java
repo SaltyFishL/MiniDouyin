@@ -27,7 +27,8 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import com.example.minidouyin.R;
-import com.example.minidouyin.Utils.ResourceUtils;
+import com.example.minidouyin.utils.ResourceUtils;
+import com.example.minidouyin.activities.PostActivity;
 import com.example.minidouyin.activities.RecordActivity;
 import com.example.minidouyin.bean.PostResponse;
 import com.example.minidouyin.network.IMiniDouyinService;
@@ -55,14 +56,14 @@ public class UploadDialogFragment extends DialogFragment {
 
     private Button upLoadButton_Record;
     private Button upLoadButton_Search;
-    private Uri selectedImage;
+
     private Uri selectedVideo;
 
     private String[] totalPermissions = new String[] {Manifest.permission.CAMERA,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.RECORD_AUDIO};
+
     private static final int REQUEST_RECORD = 1;
-    private static final int CHOOSE_IMAGE = 1;
-    private static final int CHOOSE_VIDEO = 2;
+    private static final int CHOOSE_VIDEO = 1;
 
     @Nullable
     @Override
@@ -95,27 +96,13 @@ public class UploadDialogFragment extends DialogFragment {
         upLoadButton_Search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (ContextCompat.checkSelfPermission(getActivity(),Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(getActivity(),new String[] {Manifest.permission.WRITE_EXTERNAL_STORAGE},REQUEST_RECORD);
-                } else {
-                    String s = upLoadButton_Search.getText().toString();
-                    if (getString(R.string.selectImage).equals(s)) {
-                        chooseImage();
-                    } else if (getString(R.string.selectVideo).equals(s)) {
-                        chooseVideo();
-                    } else if (getString(R.string.post).equals(s)){
-                        postVideo();
-                    }
+                if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_RECORD);
+                } else{
+                    chooseVideo();
                 }
             }
         });
-    }
-
-    public void chooseImage() {
-        Intent intent = new Intent();
-        intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Select Image"), CHOOSE_IMAGE);
     }
 
     public void chooseVideo() {
@@ -128,41 +115,15 @@ public class UploadDialogFragment extends DialogFragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
         if (resultCode == RESULT_OK && null != data) {
-            if (requestCode == CHOOSE_IMAGE) {
-                selectedImage = data.getData();
-                upLoadButton_Search.setText(R.string.selectVideo);
-            } else if (requestCode == CHOOSE_VIDEO) {
+            if (requestCode == CHOOSE_VIDEO) {
                 selectedVideo = data.getData();
-                upLoadButton_Search.setText(R.string.post);
+                String videoUriPath =selectedVideo.toString();
+                Intent intent = new Intent();
+                intent.setClass(getActivity(), PostActivity.class);
+                intent.putExtra("videoUri",videoUriPath);
+                startActivity(intent);
             }
         }
-    }
-
-    private MultipartBody.Part getMultipartFromUri(String name, Uri uri) {
-        File file = new File(ResourceUtils.getRealPath(getActivity(), uri));
-        RequestBody requestFile = RequestBody.create(MediaType.parse("multipart/form-data"), file);
-        return MultipartBody.Part.createFormData(name, file.getName(), requestFile);
-    }
-
-    private void postVideo() {
-        upLoadButton_Search.setText(R.string.posting);
-        upLoadButton_Search.setEnabled(false);
-
-        Retrofit retrofit = RetrofitManager.get("http://test.androidcamp.bytedance.com/");
-        Call<PostResponse> call = retrofit.create(IMiniDouyinService.class).createVideo("123456","puppy",
-                getMultipartFromUri("cover_image",selectedImage),getMultipartFromUri("video",selectedVideo));
-        call.enqueue(new Callback<PostResponse>() {
-            @Override
-            public void onResponse(Call<PostResponse> call, Response<PostResponse> response) {
-                Toast.makeText(getActivity(),R.string.postSuccess,Toast.LENGTH_LONG).show();
-            }
-
-            @Override
-            public void onFailure(Call<PostResponse> call, Throwable t) {
-
-            }
-        });
     }
 }

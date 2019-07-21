@@ -110,7 +110,7 @@ public class HomeFragment extends Fragment implements FeedAdapter.OnItemClicked 
             @Override
             public void onResponse(Call<FeedResponse> call, Response<FeedResponse> response) {
                 mFeeds = response.body().getFeeds();
-                FeedLab.get(getActivity()).setFeeds(mFeeds);
+                FeedLab.get().setFeeds(mFeeds);
 
                 mFeedAdapter = new FeedAdapter(getActivity(), mFeeds);
                 mRecyclerView.setAdapter(mFeedAdapter);
