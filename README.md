@@ -49,6 +49,7 @@
 5. 实现录制10秒自动停止的功能.
 6. 添加动画效果.
 7. 制作答辩ppt
+8. 添加在首页摇一摇进入拍摄页面的功能
 
 ## 感谢:
 这次暑期实训的所有老师, 远在土澳的[mmgg](https://github.com/AtlasRE), 以及Google, StackOverflow, CSDN.
